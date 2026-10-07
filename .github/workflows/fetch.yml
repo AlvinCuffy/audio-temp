@@ -1,0 +1,35 @@
+name: Fetch audio from a URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Direct download link (Dropbox: change dl=0 to dl=1)"
+        required: true
+      filename:
+        description: "Save it as"
+        required: true
+        default: song.wav
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download
+        run: |
+          curl -fL --retry 3 --retry-delay 2 -o "${{ inputs.filename }}" "${{ inputs.url }}"
+          ls -l "${{ inputs.filename }}"
+          file "${{ inputs.filename }}"
+
+      - name: Commit it to the repo
+        run: |
+          git config user.name  "audio-fetch"
+          git config user.email "actions@users.noreply.github.com"
+          git add "${{ inputs.filename }}"
+          git commit -m "Add ${{ inputs.filename }}"
+          git push
